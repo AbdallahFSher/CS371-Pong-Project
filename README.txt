@@ -3,13 +3,14 @@ Contact Info
 
 Group Members & Email Addresses:
 
-    Person 1, person1@uky.edu
+    Abdallah Sher, afsh230@uky.edu
     Person 2, person2@uky.edu
+    Person 3, person3@uky.edu
 
 Versioning
 ==========
 
-Github Link: 
+Github Link: https://github.com/AbdallahFSher/CS371-Pong-Project 
 
 General Info
 ============
