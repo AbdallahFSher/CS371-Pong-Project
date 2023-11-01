@@ -245,7 +245,7 @@ def startScreen():
     relative_image_path = os.path.join("assets", "images", "logo.png")
     image_path = os.path.join(script_directory, relative_image_path)
 
-    image = tk.PhotoImage(file="C:/Users/Caleb Fields/Documents/CS371 Pong Project/pong/assets/images/logo.png")
+    image = tk.PhotoImage(file=image_path)
 
     titleLabel = tk.Label(image=image)
     titleLabel.grid(column=0, row=0, columnspan=2)

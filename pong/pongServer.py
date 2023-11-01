@@ -41,7 +41,7 @@ class GameState():
     def sync(self):
         return self._sync
     
-    @id.setter
+    @sync.setter
     def sync(self, sync):
         self._sync = sync
 
