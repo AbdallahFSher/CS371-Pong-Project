@@ -11,6 +11,7 @@ import tkinter as tk
 import sys
 import socket
 import json # For packing and sending
+import os # For file management
 
 from assets.code.helperCode import *
 
@@ -228,13 +229,23 @@ def joinServer(ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
     playGame(screenWidth, screenHeight, side, client)  # User will be either left or right paddle
     app.quit()         # Kills the window
 
-
+# Author: Alexander Barrera, Modified by Caleb Fields
+# Purpose: Create the starting screen for the client
+# Pre: None
+# Post: User should be presented with the starting screen and be able to interact with it
 # This displays the opening screen, you don't need to edit this (but may if you like)
 def startScreen():
     app = tk.Tk()
     app.title("Server Info")
 
-    image = tk.PhotoImage(file="./assets/images/logo.png")
+    # Determine the current script's directory
+    script_directory = os.path.dirname(__file__)
+
+    # Define the relative path to the image file
+    relative_image_path = os.path.join("assets", "images", "logo.png")
+    image_path = os.path.join(script_directory, relative_image_path)
+
+    image = tk.PhotoImage(file="C:/Users/Caleb Fields/Documents/CS371 Pong Project/pong/assets/images/logo.png")
 
     titleLabel = tk.Label(image=image)
     titleLabel.grid(column=0, row=0, columnspan=2)
