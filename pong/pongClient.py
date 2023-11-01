@@ -1,7 +1,7 @@
 # =================================================================================================
 # Contributing Authors:	    Ty Gordon
 # Email Addresses:          wtgo223@uky.edu
-# Date:                     10/27/2023
+# Date:                     11/1/2023
 # Purpose:                  To implement the client and game logic
 # Misc:                     N/A
 # =================================================================================================
@@ -87,8 +87,8 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
         # Feel free to change when the score is updated to suit your needs/requirements
         
         data = {'sync': sync,   # Assemble the Json dictionary
-            'paddle': [paddle.rect.x, paddle.rect.y],
-            'ball': [ball.rect.x, paddle.rect.y],
+            'paddle': [playerPaddleObj.rect.x, playerPaddleObj.rect.y],
+            'ball': [ball.rect.x, ball.rect.y],
             'score': [lScore, rScore]}
         
         jsonData = json.dumps(data) # Dump the data
