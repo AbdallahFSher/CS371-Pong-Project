@@ -1,21 +1,23 @@
 # =================================================================================================
-# Contributing Authors:	    <Anyone who touched the code>
-# Email Addresses:          <Your uky.edu email addresses>
-# Date:                     <The date the file was last edited>
-# Purpose:                  <How this file contributes to the project>
-# Misc:                     <Not Required.  Anything else you might want to include>
+# Contributing Authors:	    Ty Gordon
+# Email Addresses:          wtgo223@uky.edu
+# Date:                     10/27/2023
+# Purpose:                  To implement the client and game logic
+# Misc:                     N/A
 # =================================================================================================
 
 import pygame
 import tkinter as tk
 import sys
 import socket
+import json # For packing and sending
 
 from assets.code.helperCode import *
 
 # This is the main game loop.  For the most part, you will not need to modify this.  The sections
 # where you should add to the code are marked.  Feel free to change any part of this project
 # to suit your needs.
+#   Modified by Ty Gordon
 def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.socket) -> None:
     
     # Pygame inits
@@ -84,7 +86,14 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
         # where the ball is and the current score.
         # Feel free to change when the score is updated to suit your needs/requirements
         
+        data = {'sync': sync,   # Assemble the Json dictionary
+            'paddle': [paddle.rect.x, paddle.rect.y],
+            'ball': [ball.rect.x, paddle.rect.y],
+            'score': [lScore, rScore]}
         
+        jsonData = json.dumps(data) # Dump the data
+        client.send(jsonData.encode()) # Send the data
+
         # =========================================================================================
 
         # Update the player paddle and opponent paddle's location on the screen
@@ -156,6 +165,28 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
         # Send your server update here at the end of the game loop to sync your game with your
         # opponent's game
 
+        # Recieve game state from client
+        recieved = client.recv(1024) # Recieve socket data
+        data = recieved.decode()    # Decode socket data
+        jsonData = json.loads(data) # Parse Json data
+
+        # Update the paddle position
+        if  playerPaddle == "left":
+            paddle.rect.x = jsonData['left'][0]
+            paddle.rect.y = jsonData['left'][1]
+        else:
+            paddle.rect.x = jsonData['right'][0]
+            paddle.rect.y = jsonData['right'][1]
+
+        sync = jsonData['sync'] # Update the sync variable
+
+        ball.rect.x = jsonData['ball'][0]   # Update the ball position
+        ball.rect.y = jsonData['ball'][1]
+
+        lScore = jsonData['score'][0]   # Update the scores
+        rScore = jsonData['score'][1]
+
+
         # =========================================================================================
 
 
@@ -165,6 +196,7 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
 # the screen width, height and player paddle (either "left" or "right")
 # If you want to hard code the screen's dimensions into the code, that's fine, but you will need to know
 # which client is which
+#   Modified by Ty Gordon
 def joinServer(ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
     # Purpose:      This method is fired when the join button is clicked
     # Arguments:
@@ -178,7 +210,13 @@ def joinServer(ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     # Get the required information from your server (screen width, height & player paddle, "left or "right)
+    recieved = client.recv(1024)
+    data = recieved.decode()
+    jsonData = json.loads(data)
 
+    side = jsonData['side']
+    screenHeight = jsonData['height']
+    screenWidth = jsonData['width']
 
     # If you have messages you'd like to show the user use the errorLabel widget like so
     errorLabel.config(text=f"Unable to connect to server: IP: {ip}, Port: {port}")
@@ -186,9 +224,9 @@ def joinServer(ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
     errorLabel.update()     
 
     # Close this window and start the game with the info passed to you from the server
-    #app.withdraw()     # Hides the window (we'll kill it later)
-    #playGame(screenWidth, screenHeight, ("left"|"right"), client)  # User will be either left or right paddle
-    #app.quit()         # Kills the window
+    app.withdraw()     # Hides the window (we'll kill it later)
+    playGame(screenWidth, screenHeight, side, client)  # User will be either left or right paddle
+    app.quit()         # Kills the window
 
 
 # This displays the opening screen, you don't need to edit this (but may if you like)
