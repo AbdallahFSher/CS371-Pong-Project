@@ -1,6 +1,6 @@
 # =================================================================================================
-# Contributing Authors:	    Ty Gordon
-# Email Addresses:          wtgo223@uky.edu
+# Contributing Authors:	    Ty Gordon, Caleb Fields
+# Email Addresses:          wtgo223@uky.edu, cwfi224@uky.edu
 # Date:                     11/1/2023
 # Purpose:                  To implement the server logic
 # Misc:                     N/A
@@ -9,6 +9,7 @@
 import socket
 import threading
 import json # For packing and sending
+from typing import Optional, Union # For type hinting
 
 # Use this file to write your server logic
 # You will need to support at least two clients
@@ -19,97 +20,96 @@ import json # For packing and sending
 
 __gameList__ = [] # Private global list that stores dictionaries pairs of left and right players, which contain gameStates
 
-# Author(s):   Ty Gordon
+# Author(s):   Ty Gordon, Caleb Fields
+# Purpose:  To store 2-tuples of data in a concise way
+class Vec2D():
+    def __init__(self, x=None, y=None) -> None:
+        self._x = x if x is not None else 0.0
+        self._y = y if y is not None else 0.0
+
+    def setPos(self, x: float, y: float) -> None:
+        self._x = x
+        self._y = y
+
+    @property
+    def x(self) -> float:
+        return self._x
+
+    @x.setter
+    def x(self, x: float) -> None:
+        self._x = x
+
+    @property
+    def y(self) -> float:
+        return self._y
+
+    @x.setter
+    def y(self, y: float) -> None:
+        self._y = y
+
+
+# Author(s):   Ty Gordon, Caleb Fields
 # Purpose:  To store game state data in a concise way
 class GameState():
-
-    def __init__(self, sync=None, leftPaddle=None, rightPaddle=None, ball=None, score=None):
-        self._sync = 0 if None else sync
-        self._leftPaddle = Vec2D() if None else leftPaddle
-        self._rightPaddle = Vec2D() if None else rightPaddle
-        self._ball = Vec2D() if None else ball
-        self._score = Vec2D() if None else score # x is left score, y is right score
-
-    def setState(self, sync, leftPaddle, rightPaddle, ball, score):
+    def __init__(self, sync: Optional[int] = None, leftPaddle: Optional[Vec2D] = None, rightPaddle: Optional[Vec2D] = None, ball: Optional[Vec2D] = None, score: Optional[Vec2D] = None):
+        self._sync = 0 if sync is None else sync
+        self._leftPaddle = Vec2D() if leftPaddle is None else leftPaddle
+        self._rightPaddle = Vec2D() if rightPaddle is None else rightPaddle
+        self._ball = Vec2D() if ball is None else ball
+        self._score = Vec2D() if score is None else score  # x is left score, y is right score
+        
+    def setState(self, sync: Optional[int], leftPaddle: Union[Vec2D, None], rightPaddle: Union[Vec2D, None], ball: Union[Vec2D, None], score: Union[Vec2D, None]):
         self._sync = sync
         self._leftPaddle = leftPaddle
         self._rightPaddle = rightPaddle
         self._ball = ball
-        self._score = score # x is left score, y is right score
+        self._score = score  # x is left score, y is right score
 
     @property
-    def sync(self):
+    def sync(self) -> int:
         return self._sync
     
-    @id.setter
-    def sync(self, sync):
+    @sync.setter
+    def sync(self, sync: int) -> None:
         self._sync = sync
 
     @property
-    def leftPaddle(self):
+    def leftPaddle(self) -> Vec2D:
         return self._leftPaddle
     
     @leftPaddle.setter
-    def leftPaddle(self, leftPaddle):
+    def leftPaddle(self, leftPaddle: Vec2D) -> None:
         self._leftPaddle = leftPaddle
 
     @property
-    def rightPaddle(self):
+    def rightPaddle(self) -> Vec2D:
         return self._rightPaddle
     
     @rightPaddle.setter
-    def rightPaddle(self, rightPaddle):
+    def rightPaddle(self, rightPaddle: Vec2D) -> None:
         self._rightPaddle = rightPaddle
 
     @property
-    def ball(self):
+    def ball(self) -> Vec2D:
         return self._ball
     
     @ball.setter
-    def ball(self, ball):
+    def ball(self, ball: Vec2D) -> None:
         self.ball = ball
 
     @property
-    def score(self):
+    def score(self) -> Vec2D:
         return self._score
     
     @score.setter
-    def score(self, score):
+    def score(self, score: Vec2D) -> None:
         self.ball = score
 
-# Author(s):   Ty Gordon
-# Purpose:  To store 2-tuples of data in a concise way
-class Vec2D():
-    def __init__(self, x=None, y=None):
-        self._x = 0.0 if None else x
-        self._y = 0.0 if None else y
-
-    def setPos(self, x, y):
-        self._x = x
-        self._y = y
-
-    @property
-    def x(self):
-        return self._x
-
-    @x.setter
-    def x(self, x):
-        self._x = x
-
-    @property
-    def y(self):
-        return self._y
-
-    @x.setter
-    def y(self, y):
-        self._y = y
-
-
-# Author(s):   Ty Gordon
+# Author(s):   Ty Gordon, Caleb Fields
 # Purpose:  To manage the interactions between the server and each client
 # Pre:  A clientSocket object must be passed in order to know which client this thread regulates
 # Post: The thread will persist and handle its client's transmissions
-def clientThread(clientSocket, clientAddress, gameId, isLeft):
+def clientThread(clientSocket: int, gameId: int, isLeft: bool) -> None:
 
     # These constants are arbitrary and may change
     SCREEN_HEIGHT = 640
@@ -181,12 +181,12 @@ def clientThread(clientSocket, clientAddress, gameId, isLeft):
     clientSocket.close()    # Close the connection after client goes silent
 
 
-# Author(s):   Ty Gordon
-# Purpose:  To establish the server's connection on a specific port, and to perpetually listen for and
+# Author(s): Ty Gordon, Caleb Fields
+# Purpose: To establish the server's connection on a specific port, and to perpetually listen for and
 #   instanciate client-server interactions through instanced threads
-# Pre:  It is expected that a server has not already been established
+# Pre: It is expected that a server has not already been established
 # Post: A server will have been created and will 
-def establishServer():
+def establishServer() -> None:
     port = 7777
 
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # Create the server
