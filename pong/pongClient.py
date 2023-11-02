@@ -1,7 +1,7 @@
 # =================================================================================================
-# Contributing Authors:	    Ty Gordon
-# Email Addresses:          wtgo223@uky.edu
-# Date:                     11/1/2023
+# Contributing Authors:	    Ty Gordon, Caleb Fields
+# Email Addresses:          wtgo223@uky.edu, cwfi224@uky.edu
+# Date:                     11/2/2023
 # Purpose:                  To implement the client and game logic
 # Misc:                     N/A
 # =================================================================================================
@@ -18,7 +18,8 @@ from assets.code.helperCode import *
 # This is the main game loop.  For the most part, you will not need to modify this.  The sections
 # where you should add to the code are marked.  Feel free to change any part of this project
 # to suit your needs.
-#   Modified by Ty Gordon
+# Player1 is the left player, if it false then the player is assumed to be the right.
+# Modified by Ty Gordon, Caleb Fields
 def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.socket) -> None:
     
     # Pygame inits
@@ -172,7 +173,7 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
         jsonData = json.loads(data) # Parse Json data
 
         # Update the paddle position
-        if  playerPaddle == "left":
+        if playerPaddle == "left":
             paddle.rect.x = jsonData['left'][0]
             paddle.rect.y = jsonData['left'][1]
         else:
@@ -197,19 +198,19 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
 # the screen width, height and player paddle (either "left" or "right")
 # If you want to hard code the screen's dimensions into the code, that's fine, but you will need to know
 # which client is which
-#   Modified by Ty Gordon
-def joinServer(ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
+#   Modified by Ty Gordon, Caleb Fields
+def joinServer(ip:str, port:int, errorLabel:tk.Label, app:tk.Tk) -> None:
     # Purpose:      This method is fired when the join button is clicked
     # Arguments:
     # ip            A string holding the IP address of the server
-    # port          A string holding the port the server is using
+    # port          An int holding the port the server is using
     # errorLabel    A tk label widget, modify it's text to display messages to the user (example below)
     # app           The tk window object, needed to kill the window
     
     # Create a socket and connect to the server
     # You don't have to use SOCK_STREAM, use what you think is best
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client.connect(("localhost", int(port)))
+    client.connect(("localhost", port))
 
     # Get the required information from your server (screen width, height & player paddle, "left or "right)
     recieved = client.recv(1024)
@@ -235,7 +236,7 @@ def joinServer(ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
 # Pre: None
 # Post: User should be presented with the starting screen and be able to interact with it
 # This displays the opening screen, you don't need to edit this (but may if you like)
-def startScreen():
+def startScreen() -> None:
     app = tk.Tk()
     app.title("Server Info")
 
