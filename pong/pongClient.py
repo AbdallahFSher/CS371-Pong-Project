@@ -87,14 +87,32 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
         # Your code here to send an update to the server on your paddle's information,
         # where the ball is and the current score.
         # Feel free to change when the score is updated to suit your needs/requirements
-        
-        data = {'sync': sync,   # Assemble the Json dictionary
-            'paddle': [playerPaddleObj.rect.x, playerPaddleObj.rect.y],
-            'ball': [ball.rect.x, ball.rect.y],
-            'score': [lScore, rScore]}
-        
-        jsonData = json.dumps(data) # Dump the data
-        client.send(jsonData.encode()) # Send the data
+        if sync != 0:
+            # Recieve game state from server
+            recieved = client.recv(1024) # Recieve socket data
+            data = recieved.decode()    # Decode socket data
+            jsonData = json.loads(data) # Parse Json data
+
+            # Update the paddle position
+            if playerPaddle == "left":
+                playerPaddleObj.rect.x = jsonData['left'][0]
+                playerPaddleObj.rect.y = jsonData['left'][1]
+                opponentPaddleObj.rect.x = jsonData['right'][0]
+                opponentPaddleObj.rect.y = jsonData['right'][1]
+            else:
+                playerPaddleObj.rect.x = jsonData['right'][0]
+                playerPaddleObj.rect.y = jsonData['right'][1]
+                opponentPaddleObj.rect.x = jsonData['left'][0]
+                opponentPaddleObj.rect.y = jsonData['left'][1]
+
+            sync = jsonData['sync'] # Update the sync variable
+
+            ball.rect.x = jsonData['ball'][0]   # Update the ball position
+            ball.rect.y = jsonData['ball'][1]
+
+            lScore = jsonData['score'][0]   # Update the scores
+            rScore = jsonData['score'][1]
+
 
         # =========================================================================================
 
@@ -166,28 +184,13 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
         # =========================================================================================
         # Send your server update here at the end of the game loop to sync your game with your
         # opponent's game
-
-        # Recieve game state from client
-        recieved = client.recv(1024) # Recieve socket data
-        data = recieved.decode()    # Decode socket data
-        jsonData = json.loads(data) # Parse Json data
-
-        # Update the paddle position
-        if playerPaddle == "left":
-            paddle.rect.x = jsonData['left'][0]
-            paddle.rect.y = jsonData['left'][1]
-        else:
-            paddle.rect.x = jsonData['right'][0]
-            paddle.rect.y = jsonData['right'][1]
-
-        sync = jsonData['sync'] # Update the sync variable
-
-        ball.rect.x = jsonData['ball'][0]   # Update the ball position
-        ball.rect.y = jsonData['ball'][1]
-
-        lScore = jsonData['score'][0]   # Update the scores
-        rScore = jsonData['score'][1]
-
+        data = {'sync': sync,   # Assemble the Json dictionary
+            'paddle': [playerPaddleObj.rect.x, playerPaddleObj.rect.y],
+            'ball': [ball.rect.x, ball.rect.y],
+            'score': [lScore, rScore]}
+        
+        jsonData = json.dumps(data) # Dump the data
+        client.send(jsonData.encode()) # Send the data
 
         # =========================================================================================
 
@@ -199,7 +202,7 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
 # If you want to hard code the screen's dimensions into the code, that's fine, but you will need to know
 # which client is which
 #   Modified by Ty Gordon, Caleb Fields
-def joinServer(ip:str, port:int, errorLabel:tk.Label, app:tk.Tk) -> None:
+def joinServer(ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
     # Purpose:      This method is fired when the join button is clicked
     # Arguments:
     # ip            A string holding the IP address of the server
@@ -210,7 +213,7 @@ def joinServer(ip:str, port:int, errorLabel:tk.Label, app:tk.Tk) -> None:
     # Create a socket and connect to the server
     # You don't have to use SOCK_STREAM, use what you think is best
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client.connect(("localhost", port))
+    client.connect(("localhost", int(port)))
 
     # Get the required information from your server (screen width, height & player paddle, "left or "right)
     recieved = client.recv(1024)
