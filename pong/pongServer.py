@@ -10,6 +10,7 @@ import socket
 import threading
 import json # For packing and sending
 from typing import Optional, Union # For type hinting
+import time
 
 # Use this file to write your server logic
 # You will need to support at least two clients
@@ -51,12 +52,13 @@ class Vec2D():
 # Author(s):   Ty Gordon, Caleb Fields
 # Purpose:  To store game state data in a concise way
 class GameState():
-    def __init__(self, sync: Optional[int] = None, leftPaddle: Optional[Vec2D] = None, rightPaddle: Optional[Vec2D] = None, ball: Optional[Vec2D] = None, score: Optional[Vec2D] = None):
+    def __init__(self, sync: Optional[int] = None, leftPaddle: Optional[Vec2D] = None, rightPaddle: Optional[Vec2D] = None, ball: Optional[Vec2D] = None, score: Optional[Vec2D] = None, start:bool = False):
         self._sync = 0 if sync is None else sync
         self._leftPaddle = Vec2D() if leftPaddle is None else leftPaddle
         self._rightPaddle = Vec2D() if rightPaddle is None else rightPaddle
         self._ball = Vec2D() if ball is None else ball
         self._score = Vec2D() if score is None else score  # x is left score, y is right score
+        self._start = False if start is None else start
         
     def setState(self, sync: Optional[int], leftPaddle: Union[Vec2D, None], rightPaddle: Union[Vec2D, None], ball: Union[Vec2D, None], score: Union[Vec2D, None]):
         self._sync = sync
@@ -95,7 +97,7 @@ class GameState():
     
     @ball.setter
     def ball(self, ball: Vec2D) -> None:
-        self.ball = ball
+        self._ball = ball
 
     @property
     def score(self) -> Vec2D:
@@ -105,11 +107,19 @@ class GameState():
     def score(self, score: Vec2D) -> None:
         self.ball = score
 
+    @property
+    def start(self) -> bool:
+        return self._start
+
+    @start.setter
+    def start(self, start: bool) -> None:
+        self._start = start
+
 # Author(s):   Ty Gordon, Caleb Fields
 # Purpose:  To manage the interactions between the server and each client
 # Pre:  A clientSocket object must be passed in order to know which client this thread regulates
 # Post: The thread will persist and handle its client's transmissions
-def clientThread(clientSocket: int, gameId: int, isLeft: bool) -> None:
+def clientThread(clientSocket: socket, clientAddress, gameId: int, isLeft: bool) -> None:
 
     # These constants are arbitrary and may change
     SCREEN_HEIGHT = 640
@@ -117,6 +127,7 @@ def clientThread(clientSocket: int, gameId: int, isLeft: bool) -> None:
     SYNC_OFFSET = 2
 
     sideString = 'left' if isLeft else 'right' # Send player's side (left or right)
+    oppString = 'right' if isLeft else 'left'  # Opponent's side (left or right)
 
     preliminaryData = {'side': sideString,
         'height': SCREEN_HEIGHT,
@@ -127,10 +138,16 @@ def clientThread(clientSocket: int, gameId: int, isLeft: bool) -> None:
 
     clientGameState = GameState()
 
+    # Make sure both players have connected
+    while not (__gameList__[gameId]['left'].start and __gameList__[gameId]['right'].start):
+     time.sleep(1)  # Wait for a second before checking again
+
     # -_-_-_-_-_-_-_ PERPETUAL LISTENING LOOP _-_-_-_-_-_-_-
     while(True):
-        
+        time.sleep(1)
+        clientGameState.start = True
         # Recieve game state from client
+        print("Recieving data from client..." + sideString)
         recieved = clientSocket.recv(1024) # Recieve socket data
         data = recieved.decode()    # Decode socket data
         jsonData = json.loads(data) # Parse Json data
@@ -138,19 +155,24 @@ def clientThread(clientSocket: int, gameId: int, isLeft: bool) -> None:
         syncNeeded = False
 
         if not recieved: # Close connection
+            print("No data")
             break
 
         # If sync is outside of limits, overwrite the state of the sender
         if isLeft:  # Self is left player
-            if abs(jsonData['sync'] - __gameList__[gameId]['right'].sync) <= SYNC_OFFSET:   # Out of sync
+            if abs(jsonData['sync'] - __gameList__[gameId]['right'].sync) >= SYNC_OFFSET:   # Out of sync
                 if jsonData['sync'] < __gameList__[gameId]['right'].sync:   # Self is behind, fix
                     __gameList__[gameId]['left'] = __gameList__[gameId]['right']
+                    clientGameState = __gameList__[gameId]['left']
                     syncNeeded = True
+                    print("Syncing left")
         else:   # Self is right player
             if abs(jsonData['sync'] - __gameList__[gameId]['left'].sync) >= SYNC_OFFSET:    # Out of sync
                 if jsonData['sync'] < __gameList__[gameId]['left'].sync:    # Self is behind, fix
                     __gameList__[gameId]['right'] = __gameList__[gameId]['left']
+                    clientGameState = __gameList__[gameId]['right']
                     syncNeeded = True
+                    print("Syncing right")
 
         # If in sync, update the server state model and parrot back the sent data
         if not syncNeeded:    
@@ -168,6 +190,7 @@ def clientThread(clientSocket: int, gameId: int, isLeft: bool) -> None:
 
             __gameList__[gameId][sideString] = clientGameState # Update the global game state
 
+        print(clientGameState.sync)
         # Send back the data
         data = {'sync': clientGameState.sync,   # Assemble the Json dictionary
             'left': [clientGameState.leftPaddle.x, clientGameState.leftPaddle.y],
@@ -212,6 +235,8 @@ def establishServer() -> None:
             __gameList__.insert(gameItr, {'left': GameState(), 'right': GameState()})
             isLeft = False
         else:
+            __gameList__[gameItr]['right'].start = True
+            __gameList__[gameItr]['left'].start = True
             gameItr += 1
             isLeft = True
 
