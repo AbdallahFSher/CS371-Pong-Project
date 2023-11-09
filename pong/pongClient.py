@@ -87,10 +87,14 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
         # Your code here to send an update to the server on your paddle's information,
         # where the ball is and the current score.
         # Feel free to change when the score is updated to suit your needs/requirements
+
+
+        # -_-_-_-_- Recieve game state from server unless sync == 0 -_-_-_-_-
+
         if sync != 0:
             # Recieve game state from server
-            recieved = client.recv(1024) # Recieve socket data
-            data = recieved.decode()    # Decode socket data
+            received = client.recv(1024) # Recieve socket data
+            data = received.decode()    # Decode socket data
             jsonData = json.loads(data) # Parse Json data
 
             # Update the paddle position
@@ -112,6 +116,13 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
 
             lScore = jsonData['score'][0]   # Update the scores
             rScore = jsonData['score'][1]
+
+
+            print("Sync: ", jsonData['sync'])
+            print("Left: ", jsonData['left'][0], " ", jsonData['left'][1])
+            print("Right: ", jsonData['right'][0], " ", jsonData['right'][1])
+            print("Ball: ", jsonData['ball'][0], " ", jsonData['ball'][1])
+
 
 
         # =========================================================================================
@@ -184,6 +195,9 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
         # =========================================================================================
         # Send your server update here at the end of the game loop to sync your game with your
         # opponent's game
+
+        # -_-_-_-_- Send state to the server -_-_-_-_-
+
         data = {'sync': sync,   # Assemble the Json dictionary
             'paddle': [playerPaddleObj.rect.x, playerPaddleObj.rect.y],
             'ball': [ball.rect.x, ball.rect.y],
@@ -216,8 +230,8 @@ def joinServer(ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
     client.connect(("localhost", int(port)))
 
     # Get the required information from your server (screen width, height & player paddle, "left or "right)
-    recieved = client.recv(1024)
-    data = recieved.decode()
+    received = client.recv(1024)
+    data = received.decode()
     jsonData = json.loads(data)
 
     side = jsonData['side']
