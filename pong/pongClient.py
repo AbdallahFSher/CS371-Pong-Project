@@ -12,6 +12,7 @@ import sys
 import socket
 import json # For packing and sending
 import os # For file management
+import time # For sleep
 
 from assets.code.helperCode import *
 
@@ -87,31 +88,13 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
         # Your code here to send an update to the server on your paddle's information,
         # where the ball is and the current score.
         # Feel free to change when the score is updated to suit your needs/requirements
-        if sync != 0:
-            # Recieve game state from server
-            recieved = client.recv(1024) # Recieve socket data
-            data = recieved.decode()    # Decode socket data
-            jsonData = json.loads(data) # Parse Json data
-
-            # Update the paddle position
-            if playerPaddle == "left":
-                playerPaddleObj.rect.x = jsonData['left'][0]
-                playerPaddleObj.rect.y = jsonData['left'][1]
-                opponentPaddleObj.rect.x = jsonData['right'][0]
-                opponentPaddleObj.rect.y = jsonData['right'][1]
-            else:
-                playerPaddleObj.rect.x = jsonData['right'][0]
-                playerPaddleObj.rect.y = jsonData['right'][1]
-                opponentPaddleObj.rect.x = jsonData['left'][0]
-                opponentPaddleObj.rect.y = jsonData['left'][1]
-
-            sync = jsonData['sync'] # Update the sync variable
-
-            ball.rect.x = jsonData['ball'][0]   # Update the ball position
-            ball.rect.y = jsonData['ball'][1]
-
-            lScore = jsonData['score'][0]   # Update the scores
-            rScore = jsonData['score'][1]
+        data = {'sync': sync,   # Assemble the Json dictionary
+            'paddle': [playerPaddleObj.rect.x, playerPaddleObj.rect.y],
+            'ball': [ball.rect.x, ball.rect.y],
+            'score': [lScore, rScore]}
+        
+        jsonData = json.dumps(data) # Dump the data
+        client.send(jsonData.encode()) # Send the data
 
 
         # =========================================================================================
@@ -184,13 +167,33 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
         # =========================================================================================
         # Send your server update here at the end of the game loop to sync your game with your
         # opponent's game
-        data = {'sync': sync,   # Assemble the Json dictionary
-            'paddle': [playerPaddleObj.rect.x, playerPaddleObj.rect.y],
-            'ball': [ball.rect.x, ball.rect.y],
-            'score': [lScore, rScore]}
-        
-        jsonData = json.dumps(data) # Dump the data
-        client.send(jsonData.encode()) # Send the data
+        # Recieve game state from server
+        recieved = client.recv(1024)    # Recieve data from server
+        data = recieved.decode()    # Decode socket data
+        jsonData = json.loads(data) # Parse Json data
+
+        # Update the paddle position
+        if playerPaddle == "left":
+            opponentPaddleObj.rect.x = jsonData['right'][0]
+            opponentPaddleObj.rect.y = jsonData['right'][1]
+        else:
+            opponentPaddleObj.rect.x = jsonData['left'][0]
+            opponentPaddleObj.rect.y = jsonData['left'][1]
+
+        if sync < jsonData['sync']: # If the sync variable is behind, update the game state
+            sync = jsonData['sync'] # Update the sync variable
+            if playerPaddle == "left":
+                playerPaddleObj.rect.x = jsonData['left'][0]
+                playerPaddleObj.rect.y = jsonData['left'][1]
+            else:
+                playerPaddleObj.rect.x = jsonData['right'][0]
+                playerPaddleObj.rect.y = jsonData['right'][1]
+
+        ball.rect.x = jsonData['ball'][0]   # Update the ball position
+        ball.rect.y = jsonData['ball'][1]
+
+        lScore = jsonData['score'][0]   # Update the scores
+        rScore = jsonData['score'][1]
 
         # =========================================================================================
 
@@ -228,6 +231,8 @@ def joinServer(ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
     errorLabel.config(text=f"Unable to connect to server: IP: {ip}, Port: {port}")
     # You may or may not need to call this, depending on how many times you update the label
     errorLabel.update()     
+
+    errorLabel.config(text="Waiting for other player...")
 
     # Close this window and start the game with the info passed to you from the server
     app.withdraw()     # Hides the window (we'll kill it later)
