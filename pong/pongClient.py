@@ -12,6 +12,7 @@ import sys
 import socket
 import json # For packing and sending
 import os # For file management
+import time # For sleep
 
 from assets.code.helperCode import *
 
@@ -242,6 +243,8 @@ def joinServer(ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
     errorLabel.config(text=f"Unable to connect to server: IP: {ip}, Port: {port}")
     # You may or may not need to call this, depending on how many times you update the label
     errorLabel.update()     
+
+    errorLabel.config(text="Waiting for other player...")
 
     # Close this window and start the game with the info passed to you from the server
     app.withdraw()     # Hides the window (we'll kill it later)

@@ -124,7 +124,9 @@ def clientThread(clientSocket: socket, clientAddress, gameId: int, isLeft: bool)
     # These constants are arbitrary and may change
     SCREEN_HEIGHT = 640
     SCREEN_WIDTH = 480
-    SYNC_OFFSET = 2
+    SYNC_OFFSET = 1
+
+    
 
     sideString = 'left' if isLeft else 'right' # Send player's side (left or right)
     oppString = 'right' if isLeft else 'left'  # Opponent's side (left or right)
@@ -144,7 +146,6 @@ def clientThread(clientSocket: socket, clientAddress, gameId: int, isLeft: bool)
 
     # -_-_-_-_-_-_-_ PERPETUAL LISTENING LOOP _-_-_-_-_-_-_-
     while(True):
-        time.sleep(1)
         clientGameState.start = True
         # Recieve game state from client
         print("Recieving data from client..." + sideString)
@@ -241,7 +242,10 @@ def establishServer() -> None:
             isLeft = True
 
         threadList.append(newThread) # Add the thread to the list and start it   (Probably unnecessary)
-        newThread.start()
+        if(__gameList__[gameItr - 1]['left'].start and __gameList__[gameItr - 1]['right'].start):
+            print("Starting game " + str(gameItr - 1))
+            threadList[-1].start()
+            threadList[-2].start()
 
     for t in threadList:    # Iterate and join all threads  (Probably unnecessary)
         t.join()
