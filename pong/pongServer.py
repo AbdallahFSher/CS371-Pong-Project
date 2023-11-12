@@ -149,19 +149,13 @@ def clientThread(clientSocket: socket, clientAddress, gameId: int, isLeft: bool)
         clientGameState.start = True
         # Recieve game state from client
         print("Recieving data from client..." + sideString)
-        recieved = None
-        while recieved is None:
-            try:
-                recieved = clientSocket.recv(1024) # Recieve socket data
-            except ConnectionResetError:
-                print("Client Disconnected. | Address: ", clientAddress[0], " Port: ", clientAddress[1])
-                break
-        data = recieved.decode()    # Decode socket data
+        received = clientSocket.recv(1024) # Recieve socket data
+        data = received.decode()    # Decode socket data
         jsonData = json.loads(data) # Parse Json data
 
         syncNeeded = False
 
-        if not recieved: # Close connection
+        if not received: # Close connection
             print("No data")
             break
 
@@ -183,7 +177,7 @@ def clientThread(clientSocket: socket, clientAddress, gameId: int, isLeft: bool)
 
         # If in sync, update the server state model and parrot back the sent data
         if not syncNeeded:    
-            # Update clientGameState using recieved data
+            # Update clientGameState using received data
             if isLeft:
                 clientGameState.leftPaddle = Vec2D(jsonData['paddle'][0], jsonData['paddle'][1])
                 clientGameState.rightPaddle = __gameList__[gameId]['right'].rightPaddle
