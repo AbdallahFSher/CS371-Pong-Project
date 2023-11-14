@@ -216,7 +216,7 @@ def establishServer() -> None:
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # Create the server
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)    # Work with localhost
 
-    server.bind(("localhost", port))    # Connect server to port and enter listening mode
+    server.bind(("10.54.185.2", port))    # Connect server to port and enter listening mode
     server.listen(5)
 
     isLeft = True   # Designates the first client as the "left" player

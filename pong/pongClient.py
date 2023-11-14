@@ -99,14 +99,6 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
         # Feel free to change when the score is updated to suit your needs/requirements
         # -_-_-_-_- Send state to the server -_-_-_-_-
 
-        data = {'sync': sync,   # Assemble the Json dictionary
-            'paddle': [playerPaddleObj.rect.x, playerPaddleObj.rect.y],
-            'ball': [ball.rect.x, ball.rect.y],
-            'score': [lScore, rScore]}
-        
-        jsonData = json.dumps(data) # Dump the data
-        client.send(jsonData.encode()) # Send the data
-
 
 
         # =========================================================================================
@@ -171,6 +163,14 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
         # Send your server update here at the end of the game loop to sync your game with your
         # opponent's game
 
+        data = {'sync': sync,   # Assemble the Json dictionary
+            'paddle': [playerPaddleObj.rect.x, playerPaddleObj.rect.y],
+            'ball': [ball.rect.x, ball.rect.y],
+            'score': [lScore, rScore]}
+        
+        jsonData = json.dumps(data) # Dump the data
+        client.send(jsonData.encode()) # Send the data
+
         # -_-_-_-_- Recieve game state from server unless sync == 0 -_-_-_-_-
 
         # Recieve game state from server
@@ -230,7 +230,7 @@ def joinServer(ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
     # Create a socket and connect to the server
     # You don't have to use SOCK_STREAM, use what you think is best
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client.connect(("localhost", int(port)))
+    client.connect((ip, int(port)))
 
     # Get the required information from your server (screen width, height & player paddle, "left or "right)
     received = client.recv(1024)
