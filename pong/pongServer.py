@@ -21,7 +21,7 @@ import time
 
 __gameList__ = [] # Private global list that stores dictionaries pairs of left and right players, which contain gameStates
 
-# Author(s):   Ty Gordon, Caleb Fields
+# Author(s):   Ty Gordon, Caleb Fields, Abdallah Sher
 # Purpose:  To store 2-tuples of data in a concise way
 class Vec2D():
     def __init__(self, x=None, y=None) -> None:
@@ -44,12 +44,12 @@ class Vec2D():
     def y(self) -> float:
         return self._y
 
-    @x.setter
+    @y.setter
     def y(self, y: float) -> None:
         self._y = y
 
 
-# Author(s):   Ty Gordon, Caleb Fields
+# Author(s):   Ty Gordon, Caleb Fields, Abdallah Sher
 # Purpose:  To store game state data in a concise way
 class GameState():
     def __init__(self, sync: Optional[int] = None, leftPaddle: Optional[Vec2D] = None, rightPaddle: Optional[Vec2D] = None, ball: Optional[Vec2D] = None, score: Optional[Vec2D] = None, start:bool = False):
@@ -115,7 +115,7 @@ class GameState():
     def start(self, start: bool) -> None:
         self._start = start
 
-# Author(s):   Ty Gordon, Caleb Fields
+# Author(s):   Ty Gordon, Caleb Fields, Abdallah Sher
 # Purpose:  To manage the interactions between the server and each client
 # Pre:  A clientSocket object must be passed in order to know which client this thread regulates
 # Post: The thread will persist and handle its client's transmissions
@@ -159,6 +159,23 @@ def clientThread(clientSocket: socket, clientAddress, gameId: int, isLeft: bool)
             print("No data")
             break
 
+        clientGameState.ball = Vec2D(jsonData['ball'][0], jsonData['ball'][1])
+        clientGameState.score = Vec2D(jsonData['score'][0], jsonData['score'][1])
+        clientGameState.sync = jsonData['sync']
+        if isLeft:
+            clientGameState.leftPaddle = Vec2D(jsonData['paddle'][0], jsonData['paddle'][1])
+            clientGameState.rightPaddle = __gameList__[gameId]['right'].rightPaddle
+        else:
+            clientGameState.leftPaddle = __gameList__[gameId]['left'].leftPaddle
+            clientGameState.rightPaddle = Vec2D(jsonData['paddle'][0], jsonData['paddle'][1])
+
+        __gameList__[gameId][sideString] = clientGameState # Update the global game state
+
+        if clientGameState.sync < __gameList__[gameId][oppString].sync:
+            clientGameState = __gameList__[gameId][oppString]
+            print("Syncing " + sideString + " to " + oppString)
+
+        '''
         # If sync is outside of limits, overwrite the state of the sender
         if isLeft:  # Self is left player
             if abs(jsonData['sync'] - __gameList__[gameId]['right'].sync) >= SYNC_OFFSET:   # Out of sync
@@ -174,22 +191,7 @@ def clientThread(clientSocket: socket, clientAddress, gameId: int, isLeft: bool)
                     clientGameState = __gameList__[gameId]['right']
                     syncNeeded = True
                     print("Syncing right")
-
-        # If in sync, update the server state model and parrot back the sent data
-        if not syncNeeded:    
-            # Update clientGameState using received data
-            if isLeft:
-                clientGameState.leftPaddle = Vec2D(jsonData['paddle'][0], jsonData['paddle'][1])
-                clientGameState.rightPaddle = __gameList__[gameId]['right'].rightPaddle
-            else:
-                clientGameState.leftPaddle = __gameList__[gameId]['left'].leftPaddle
-                clientGameState.rightPaddle = Vec2D(jsonData['paddle'][0], jsonData['paddle'][1])
-
-            clientGameState.sync = jsonData['sync']
-            clientGameState.ball = Vec2D(jsonData['ball'][0], jsonData['ball'][1])
-            clientGameState.score = Vec2D(jsonData['score'][0], jsonData['score'][1])
-
-            __gameList__[gameId][sideString] = clientGameState # Update the global game state
+        '''
 
         print(clientGameState.sync)
         # Send back the data
@@ -205,7 +207,7 @@ def clientThread(clientSocket: socket, clientAddress, gameId: int, isLeft: bool)
     clientSocket.close()    # Close the connection after client goes silent
 
 
-# Author(s): Ty Gordon, Caleb Fields
+# Author(s): Ty Gordon, Caleb Fields, Abdallah Sher
 # Purpose: To establish the server's connection on a specific port, and to perpetually listen for and
 #   instanciate client-server interactions through instanced threads
 # Pre: It is expected that a server has not already been established

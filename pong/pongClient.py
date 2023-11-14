@@ -20,7 +20,7 @@ from assets.code.helperCode import *
 # where you should add to the code are marked.  Feel free to change any part of this project
 # to suit your needs.
 # Player1 is the left player, if it false then the player is assumed to be the right.
-# Modified by Ty Gordon, Caleb Fields
+# Modified by Ty Gordon, Caleb Fields, Abdallah Sher
 def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.socket) -> None:
     
     # Pygame inits
@@ -85,13 +85,20 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
                 playerPaddleObj.moving = ""
 
         # Update the player paddle and opponent paddle's location on the screen
-        for paddle in [playerPaddleObj, opponentPaddleObj]:
-            if paddle.moving == "down":
-                if paddle.rect.bottomleft[1] < screenHeight-10:
-                    paddle.rect.y += paddle.speed
-            elif paddle.moving == "up":
-                if paddle.rect.topleft[1] > 10:
-                    paddle.rect.y -= paddle.speed
+        #for paddle in [playerPaddleObj, opponentPaddleObj]:
+        #    if paddle.moving == "down":
+        #        if paddle.rect.bottomleft[1] < screenHeight-10:
+        #            paddle.rect.y += paddle.speed
+         #   elif paddle.moving == "up":
+         #       if paddle.rect.topleft[1] > 10:
+         #           paddle.rect.y -= paddle.speed
+         # Update the player paddle's location on the screen
+        if playerPaddleObj.moving == "down":
+            if playerPaddleObj.rect.bottomleft[1] < screenHeight-10:
+                playerPaddleObj.rect.y += playerPaddleObj.speed
+        elif playerPaddleObj.moving == "up":
+            if playerPaddleObj.rect.topleft[1] > 10:
+                playerPaddleObj.rect.y -= playerPaddleObj.speed
 
         # =========================================================================================
         # Your code here to send an update to the server on your paddle's information,
@@ -218,7 +225,7 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
 # the screen width, height and player paddle (either "left" or "right")
 # If you want to hard code the screen's dimensions into the code, that's fine, but you will need to know
 # which client is which
-#   Modified by Ty Gordon, Caleb Fields
+#   Modified by Ty Gordon, Caleb Fields, Abdallah Sher
 def joinServer(ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
     # Purpose:      This method is fired when the join button is clicked
     # Arguments:
