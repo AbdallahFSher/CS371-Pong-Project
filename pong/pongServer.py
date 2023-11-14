@@ -105,7 +105,7 @@ class GameState():
     
     @score.setter
     def score(self, score: Vec2D) -> None:
-        self.ball = score
+        self._score = score
 
     @property
     def start(self) -> bool:

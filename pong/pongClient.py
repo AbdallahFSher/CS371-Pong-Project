@@ -84,50 +84,6 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
             elif event.type == pygame.KEYUP:
                 playerPaddleObj.moving = ""
 
-        # =========================================================================================
-        # Your code here to send an update to the server on your paddle's information,
-        # where the ball is and the current score.
-        # Feel free to change when the score is updated to suit your needs/requirements
-
-
-        # -_-_-_-_- Recieve game state from server unless sync == 0 -_-_-_-_-
-
-        if sync != 0:
-            # Recieve game state from server
-            received = client.recv(1024) # Recieve socket data
-            data = received.decode()    # Decode socket data
-            jsonData = json.loads(data) # Parse Json data
-
-            # Update the paddle position
-            if playerPaddle == "left":
-                playerPaddleObj.rect.x = jsonData['left'][0]
-                playerPaddleObj.rect.y = jsonData['left'][1]
-                opponentPaddleObj.rect.x = jsonData['right'][0]
-                opponentPaddleObj.rect.y = jsonData['right'][1]
-            else:
-                playerPaddleObj.rect.x = jsonData['right'][0]
-                playerPaddleObj.rect.y = jsonData['right'][1]
-                opponentPaddleObj.rect.x = jsonData['left'][0]
-                opponentPaddleObj.rect.y = jsonData['left'][1]
-
-            sync = jsonData['sync'] # Update the sync variable
-
-            ball.rect.x = jsonData['ball'][0]   # Update the ball position
-            ball.rect.y = jsonData['ball'][1]
-
-            lScore = jsonData['score'][0]   # Update the scores
-            rScore = jsonData['score'][1]
-
-
-            print("Sync: ", jsonData['sync'])
-            print("Left: ", jsonData['left'][0], " ", jsonData['left'][1])
-            print("Right: ", jsonData['right'][0], " ", jsonData['right'][1])
-            print("Ball: ", jsonData['ball'][0], " ", jsonData['ball'][1])
-
-
-
-        # =========================================================================================
-
         # Update the player paddle and opponent paddle's location on the screen
         for paddle in [playerPaddleObj, opponentPaddleObj]:
             if paddle.moving == "down":
@@ -136,6 +92,24 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
             elif paddle.moving == "up":
                 if paddle.rect.topleft[1] > 10:
                     paddle.rect.y -= paddle.speed
+
+        # =========================================================================================
+        # Your code here to send an update to the server on your paddle's information,
+        # where the ball is and the current score.
+        # Feel free to change when the score is updated to suit your needs/requirements
+        # -_-_-_-_- Send state to the server -_-_-_-_-
+
+        data = {'sync': sync,   # Assemble the Json dictionary
+            'paddle': [playerPaddleObj.rect.x, playerPaddleObj.rect.y],
+            'ball': [ball.rect.x, ball.rect.y],
+            'score': [lScore, rScore]}
+        
+        jsonData = json.dumps(data) # Dump the data
+        client.send(jsonData.encode()) # Send the data
+
+
+
+        # =========================================================================================
 
         # If the game is over, display the win message
         if lScore > 4 or rScore > 4:
@@ -186,26 +160,54 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
         pygame.draw.rect(screen, WHITE, topWall)
         pygame.draw.rect(screen, WHITE, bottomWall)
         scoreRect = updateScore(lScore, rScore, screen, WHITE, scoreFont)
-        pygame.display.update([topWall, bottomWall, ball, leftPaddle, rightPaddle, scoreRect, winMessage])
+        pygame.display.update()
         clock.tick(60)
         
         # This number should be synchronized between you and your opponent.  If your number is larger
         # then you are ahead of them in time, if theirs is larger, they are ahead of you, and you need to
         # catch up (use their info)
-        sync += 1
+        #sync += 1
         # =========================================================================================
         # Send your server update here at the end of the game loop to sync your game with your
         # opponent's game
 
-        # -_-_-_-_- Send state to the server -_-_-_-_-
+        # -_-_-_-_- Recieve game state from server unless sync == 0 -_-_-_-_-
 
-        data = {'sync': sync,   # Assemble the Json dictionary
-            'paddle': [playerPaddleObj.rect.x, playerPaddleObj.rect.y],
-            'ball': [ball.rect.x, ball.rect.y],
-            'score': [lScore, rScore]}
-        
-        jsonData = json.dumps(data) # Dump the data
-        client.send(jsonData.encode()) # Send the data
+        # Recieve game state from server
+        received = client.recv(1024) # Recieve socket data
+        data = received.decode()    # Decode socket data
+        jsonData = json.loads(data) # Parse Json data
+
+        if sync != jsonData['sync']: # If the sync variable is not equal to the sync variable from the server
+            # Update the player paddle position
+            if playerPaddle == "left":
+                playerPaddleObj.rect.x = jsonData['left'][0]
+                playerPaddleObj.rect.y = jsonData['left'][1]
+            else:
+                playerPaddleObj.rect.x = jsonData['right'][0]
+                playerPaddleObj.rect.y = jsonData['right'][1]
+
+            ball.rect.x = jsonData['ball'][0]   # Update the ball position
+            ball.rect.y = jsonData['ball'][1]
+
+            lScore = jsonData['score'][0]   # Update the scores
+            rScore = jsonData['score'][1]
+
+
+        if playerPaddle == "left":
+            opponentPaddleObj.rect.x = jsonData['right'][0]
+            opponentPaddleObj.rect.y = jsonData['right'][1]
+        else:
+            opponentPaddleObj.rect.x = jsonData['left'][0]
+            opponentPaddleObj.rect.y = jsonData['left'][1]
+
+        sync = jsonData['sync'] + 1 # Update the sync variable
+
+
+        print("Sync: ", jsonData['sync'])
+        print("Left: ", jsonData['left'][0], " ", jsonData['left'][1])
+        print("Right: ", jsonData['right'][0], " ", jsonData['right'][1])
+        print("Ball: ", jsonData['ball'][0], " ", jsonData['ball'][1])
 
         # =========================================================================================
 
