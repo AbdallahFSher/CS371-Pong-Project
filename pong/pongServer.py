@@ -19,6 +19,7 @@ import time
 # I suggest you use the sync variable in pongClient.py to determine how out of sync your two
 # clients are and take actions to resync the games
 
+SERVER_IP = "10.47.114.246"
 __gameList__ = [] # Private global list that stores dictionaries pairs of left and right players, which contain gameStates
 
 # Author(s):   Ty Gordon, Caleb Fields, Abdallah Sher
@@ -122,8 +123,8 @@ class GameState():
 def clientThread(clientSocket: socket, clientAddress, gameId: int, isLeft: bool) -> None:
 
     # These constants are arbitrary and may change
-    SCREEN_HEIGHT = 640
-    SCREEN_WIDTH = 480
+    SCREEN_HEIGHT = 480
+    SCREEN_WIDTH = 640
     SYNC_OFFSET = 1
 
     
@@ -218,7 +219,7 @@ def establishServer() -> None:
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # Create the server
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)    # Work with localhost
 
-    server.bind(("localhost", port))    # Connect server to port and enter listening mode
+    server.bind((SERVER_IP, port))    # Connect server to port and enter listening mode
     server.listen(5)
 
     isLeft = True   # Designates the first client as the "left" player
