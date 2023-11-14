@@ -237,7 +237,7 @@ def joinServer(ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
     # Create a socket and connect to the server
     # You don't have to use SOCK_STREAM, use what you think is best
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client.connect((ip, int(port)))
+    client.connect(("localhost", int(port)))
 
     # Get the required information from your server (screen width, height & player paddle, "left or "right)
     received = client.recv(1024)
