@@ -140,10 +140,11 @@ def clientThread(clientSocket: socket, clientAddress, gameId: int, isLeft: bool)
     clientSocket.send(jPreliminaryData.encode()) # Send side, screen height and screen width
 
     clientGameState = GameState()
+    clientGameState.ball = Vec2D(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
+    clientGameState.start = True
 
     # -_-_-_-_-_-_-_ PERPETUAL LISTENING LOOP _-_-_-_-_-_-_-
     while(__gameList__[gameId]['left'].start and __gameList__[gameId]['right'].start):
-        clientGameState.start = True
         # Recieve game state from client
         print("Recieving data from client..." + sideString)
         received = clientSocket.recv(1024) # Recieve socket data
@@ -156,12 +157,9 @@ def clientThread(clientSocket: socket, clientAddress, gameId: int, isLeft: bool)
             print("No data")
             break
 
-        clientGameState.ball = Vec2D(jsonData['ball'][0], jsonData['ball'][1])
-        if clientGameState.ball.x != __gameList__[gameId][oppString].ball.x or clientGameState.ball.y != __gameList__[gameId][oppString].ball.y:
-            clientGameState.ball = __gameList__[gameId][oppString].ball
-
         clientGameState.score = Vec2D(jsonData['score'][0], jsonData['score'][1])
         clientGameState.sync = jsonData['sync']
+        clientGameState.ball = Vec2D(jsonData['ball'][0], jsonData['ball'][1])
         if isLeft:
             clientGameState.leftPaddle = Vec2D(jsonData['paddle'][0], jsonData['paddle'][1])
             clientGameState.rightPaddle = __gameList__[gameId]['right'].rightPaddle

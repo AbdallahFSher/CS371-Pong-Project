@@ -228,8 +228,9 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
         print("Left: ", jsonData['left'][0], " ", jsonData['left'][1])
         print("Right: ", jsonData['right'][0], " ", jsonData['right'][1])
         print("Ball: ", jsonData['ball'][0], " ", jsonData['ball'][1])
-        time.sleep(1)
-        ballCounter+=1
+        if ballCounter < 3:
+            time.sleep(1)
+            ballCounter+=1
 
         # =========================================================================================
 
