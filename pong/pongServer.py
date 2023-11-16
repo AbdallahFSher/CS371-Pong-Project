@@ -161,6 +161,7 @@ def clientThread(clientSocket: socket, clientAddress, gameId: int, isLeft: bool)
         clientGameState.score = Vec2D(jsonData['score'][0], jsonData['score'][1])
         clientGameState.sync = jsonData['sync']
         clientGameState.ball = Vec2D(jsonData['ball'][0], jsonData['ball'][1])
+
         if isLeft:
             clientGameState.leftPaddle = Vec2D(jsonData['paddle'][0], jsonData['paddle'][1])
             clientGameState.rightPaddle = __gameList__[gameId]['right'].rightPaddle
@@ -170,7 +171,7 @@ def clientThread(clientSocket: socket, clientAddress, gameId: int, isLeft: bool)
 
         __gameList__[gameId][sideString] = clientGameState # Update the global game state
 
-        if clientGameState.sync < __gameList__[gameId][oppString].sync:
+        if clientGameState.sync < __gameList__[gameId][oppString].sync or clientGameState.ball != __gameList__[gameId][oppString].ball:
             clientGameState = __gameList__[gameId][oppString]
             print("Syncing " + sideString + " to " + oppString)
 
