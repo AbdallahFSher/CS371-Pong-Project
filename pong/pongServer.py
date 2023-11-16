@@ -145,6 +145,7 @@ def clientThread(clientSocket: socket, clientAddress, gameId: int, isLeft: bool)
 
     # -_-_-_-_-_-_-_ PERPETUAL LISTENING LOOP _-_-_-_-_-_-_-
     while(__gameList__[gameId]['left'].start and __gameList__[gameId]['right'].start):
+        time.sleep(0.01)
         # Recieve game state from client
         print("Recieving data from client..." + sideString)
         received = clientSocket.recv(1024) # Recieve socket data
