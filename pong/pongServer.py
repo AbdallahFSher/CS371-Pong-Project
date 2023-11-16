@@ -19,7 +19,7 @@ import time
 # I suggest you use the sync variable in pongClient.py to determine how out of sync your two
 # clients are and take actions to resync the games
 
-SERVER_IP = "localhost"
+SERVER_IP = "10.47.145.97"
 __gameList__ = [] # Private global list that stores dictionaries pairs of left and right players, which contain gameStates
 
 # Author(s):   Ty Gordon, Caleb Fields, Abdallah Sher

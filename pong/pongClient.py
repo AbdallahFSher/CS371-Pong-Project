@@ -63,6 +63,7 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
     rScore = 0
 
     sync = 0
+    ballCounter = 0
 
     playing = True
 
@@ -130,7 +131,7 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
             playAgainRect.center = ((screenWidth/2), (screenHeight/2)+50)
             screen.blit(playAgainText, playAgainRect)
             playing = False
-        else:
+        elif ballCounter >= 3:
             # ==== Ball Logic =====================================================================
             ball.updatePos()
 
@@ -227,6 +228,8 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
         print("Left: ", jsonData['left'][0], " ", jsonData['left'][1])
         print("Right: ", jsonData['right'][0], " ", jsonData['right'][1])
         print("Ball: ", jsonData['ball'][0], " ", jsonData['ball'][1])
+        time.sleep(1)
+        ballCounter+=1
 
         # =========================================================================================
 
