@@ -24,6 +24,11 @@ class Ball:
         self.startYpos = rect.y
     
     def updatePos(self) -> None:
+        # Clamp velocity to 6
+        if self.xVel > 6:
+            self.xVel = 6
+        elif self.xVel < -6:
+            self.xVel = -6
         self.rect.x += self.xVel
         self.rect.y += self.yVel
     
