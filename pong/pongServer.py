@@ -141,12 +141,8 @@ def clientThread(clientSocket: socket, clientAddress, gameId: int, isLeft: bool)
 
     clientGameState = GameState()
 
-    # Make sure both players have connected
-    while not (__gameList__[gameId]['left'].start and __gameList__[gameId]['right'].start):
-     time.sleep(1)  # Wait for a second before checking again
-
     # -_-_-_-_-_-_-_ PERPETUAL LISTENING LOOP _-_-_-_-_-_-_-
-    while(True):
+    while(__gameList__[gameId]['left'].start and __gameList__[gameId]['right'].start):
         clientGameState.start = True
         # Recieve game state from client
         print("Recieving data from client..." + sideString)

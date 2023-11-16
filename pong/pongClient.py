@@ -22,7 +22,6 @@ from assets.code.helperCode import *
 # Player1 is the left player, if it false then the player is assumed to be the right.
 # Modified by Ty Gordon, Caleb Fields, Abdallah Sher
 def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.socket) -> None:
-    
     # Pygame inits
     pygame.mixer.pre_init(44100, -16, 2, 2048)
     pygame.init()
@@ -65,6 +64,8 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
 
     sync = 0
 
+    playing = True
+
     while True:
         # Wiping the screen
         screen.fill((0,0,0))
@@ -83,6 +84,13 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
 
             elif event.type == pygame.KEYUP:
                 playerPaddleObj.moving = ""
+            elif not playing and event.type == pygame.K_SPACE:
+                #Clear the wintext and play again text from the screen
+                screen.fill((0,0,0), winMessage)
+                screen.fill((0,0,0), playAgainRect)
+                lScore = 0
+                rScore = 0
+                playing = True
 
         # Update the player paddle and opponent paddle's location on the screen
         #for paddle in [playerPaddleObj, opponentPaddleObj]:
@@ -117,6 +125,11 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
             textRect = textSurface.get_rect()
             textRect.center = ((screenWidth/2), screenHeight/2)
             winMessage = screen.blit(textSurface, textRect)
+            playAgainText = winFont.render("Space to Play Again", False, WHITE, (0,0,0))
+            playAgainRect = playAgainText.get_rect()
+            playAgainRect.center = ((screenWidth/2), (screenHeight/2)+50)
+            screen.blit(playAgainText, playAgainRect)
+            playing = False
         else:
             # ==== Ball Logic =====================================================================
             ball.updatePos()
@@ -238,6 +251,9 @@ def joinServer(ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client.connect((ip, int(port)))
 
+    errorLabel.config(text="Waiting for other player...")
+    errorLabel.update()
+
     # Get the required information from your server (screen width, height & player paddle, "left or "right)
     received = client.recv(1024)
     data = received.decode()
@@ -252,7 +268,7 @@ def joinServer(ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
     # You may or may not need to call this, depending on how many times you update the label
     errorLabel.update()     
 
-    errorLabel.config(text="Waiting for other player...")
+
 
     # Close this window and start the game with the info passed to you from the server
     app.withdraw()     # Hides the window (we'll kill it later)
