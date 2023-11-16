@@ -19,7 +19,7 @@ import time
 # I suggest you use the sync variable in pongClient.py to determine how out of sync your two
 # clients are and take actions to resync the games
 
-SERVER_IP = "10.47.114.246"
+SERVER_IP = "localhost"
 __gameList__ = [] # Private global list that stores dictionaries pairs of left and right players, which contain gameStates
 
 # Author(s):   Ty Gordon, Caleb Fields, Abdallah Sher
@@ -161,6 +161,9 @@ def clientThread(clientSocket: socket, clientAddress, gameId: int, isLeft: bool)
             break
 
         clientGameState.ball = Vec2D(jsonData['ball'][0], jsonData['ball'][1])
+        if clientGameState.ball.x != __gameList__[gameId][oppString].ball.x or clientGameState.ball.y != __gameList__[gameId][oppString].ball.y:
+            clientGameState.ball = __gameList__[gameId][oppString].ball
+
         clientGameState.score = Vec2D(jsonData['score'][0], jsonData['score'][1])
         clientGameState.sync = jsonData['sync']
         if isLeft:

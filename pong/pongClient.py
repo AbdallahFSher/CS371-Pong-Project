@@ -75,10 +75,10 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
                 pygame.quit()
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_DOWN:
+                if event.key == pygame.K_DOWN or event.key == pygame.K_s:
                     playerPaddleObj.moving = "down"
 
-                elif event.key == pygame.K_UP:
+                elif event.key == pygame.K_UP or event.key == pygame.K_w:
                     playerPaddleObj.moving = "up"
 
             elif event.type == pygame.KEYUP:
@@ -118,7 +118,6 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
             textRect.center = ((screenWidth/2), screenHeight/2)
             winMessage = screen.blit(textSurface, textRect)
         else:
-
             # ==== Ball Logic =====================================================================
             ball.updatePos()
 
@@ -194,11 +193,11 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
                 playerPaddleObj.rect.x = jsonData['right'][0]
                 playerPaddleObj.rect.y = jsonData['right'][1]
 
-            ball.rect.x = jsonData['ball'][0]   # Update the ball position
-            ball.rect.y = jsonData['ball'][1]
+        ball.rect.x = jsonData['ball'][0]   # Update the ball position
+        ball.rect.y = jsonData['ball'][1]
 
-            lScore = jsonData['score'][0]   # Update the scores
-            rScore = jsonData['score'][1]
+        lScore = jsonData['score'][0]   # Update the scores
+        rScore = jsonData['score'][1]
 
 
         if playerPaddle == "left":
