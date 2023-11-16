@@ -26,8 +26,8 @@ __gameList__ = [] # Private global list that stores dictionaries pairs of left a
 # Purpose:  To store 2-tuples of data in a concise way
 class Vec2D():
     def __init__(self, x=None, y=None) -> None:
-        self._x = 0.0 if x is None else x
-        self._y = 0.0 if y is None else y
+        self._x = x if x is not None else 0.0
+        self._y = y if y is not None else 0.0
 
     def setPos(self, x: float, y: float) -> None:
         self._x = x
@@ -157,40 +157,23 @@ def clientThread(clientSocket: socket, clientAddress, gameId: int, isLeft: bool)
         if not received: # Close connection
             print("No data")
             break
-        elif clientGameState.sync < __gameList__[gameId][oppString].sync or clientGameState.ball != __gameList__[gameId][oppString].ball:
+
+        clientGameState.score = Vec2D(jsonData['score'][0], jsonData['score'][1])
+        clientGameState.sync = jsonData['sync']
+        clientGameState.ball = Vec2D(jsonData['ball'][0], jsonData['ball'][1])
+
+        if isLeft:
+            clientGameState.leftPaddle = Vec2D(jsonData['paddle'][0], jsonData['paddle'][1])
+            clientGameState.rightPaddle = __gameList__[gameId]['right'].rightPaddle
+        else:
+            clientGameState.leftPaddle = __gameList__[gameId]['left'].leftPaddle
+            clientGameState.rightPaddle = Vec2D(jsonData['paddle'][0], jsonData['paddle'][1])
+
+        __gameList__[gameId][sideString] = clientGameState # Update the global game state
+
+        if clientGameState.sync < __gameList__[gameId][oppString].sync:
             clientGameState = __gameList__[gameId][oppString]
             print("Syncing " + sideString + " to " + oppString)
-        else:
-            clientGameState.score = Vec2D(jsonData['score'][0], jsonData['score'][1])
-            clientGameState.sync = jsonData['sync']
-            clientGameState.ball = Vec2D(jsonData['ball'][0], jsonData['ball'][1])
-
-            if isLeft:
-                clientGameState.leftPaddle = Vec2D(jsonData['paddle'][0], jsonData['paddle'][1])
-                clientGameState.rightPaddle = __gameList__[gameId]['right'].rightPaddle
-            else:
-                clientGameState.leftPaddle = __gameList__[gameId]['left'].leftPaddle
-                clientGameState.rightPaddle = Vec2D(jsonData['paddle'][0], jsonData['paddle'][1])
-
-            __gameList__[gameId][sideString] = clientGameState # Update the global game state
-
-        '''
-        # If sync is outside of limits, overwrite the state of the sender
-        if isLeft:  # Self is left player
-            if abs(jsonData['sync'] - __gameList__[gameId]['right'].sync) >= SYNC_OFFSET:   # Out of sync
-                if jsonData['sync'] < __gameList__[gameId]['right'].sync:   # Self is behind, fix
-                    __gameList__[gameId]['left'] = __gameList__[gameId]['right']
-                    clientGameState = __gameList__[gameId]['left']
-                    syncNeeded = True
-                    print("Syncing left")
-        else:   # Self is right player
-            if abs(jsonData['sync'] - __gameList__[gameId]['left'].sync) >= SYNC_OFFSET:    # Out of sync
-                if jsonData['sync'] < __gameList__[gameId]['left'].sync:    # Self is behind, fix
-                    __gameList__[gameId]['right'] = __gameList__[gameId]['left']
-                    clientGameState = __gameList__[gameId]['right']
-                    syncNeeded = True
-                    print("Syncing right")
-        '''
 
         print(clientGameState.sync)
         # Send back the data
