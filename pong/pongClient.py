@@ -1,7 +1,7 @@
 # =================================================================================================
-# Contributing Authors:	    Ty Gordon, Caleb Fields
-# Email Addresses:          wtgo223@uky.edu, cwfi224@uky.edu
-# Date:                     11/2/2023
+# Contributing Authors:	    Ty Gordon, Caleb Fields, Abdallah Sher
+# Email Addresses:          wtgo223@uky.edu, cwfi224@uky.edu, afsh230@uky.edu
+# Date:                     11/17/2023
 # Purpose:                  To implement the client and game logic
 # Misc:                     N/A
 # =================================================================================================
@@ -94,28 +94,22 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
                 playing = True
 
         # Update the player paddle and opponent paddle's location on the screen
+
         #for paddle in [playerPaddleObj, opponentPaddleObj]:
         #    if paddle.moving == "down":
         #        if paddle.rect.bottomleft[1] < screenHeight-10:
         #            paddle.rect.y += paddle.speed
-         #   elif paddle.moving == "up":
-         #       if paddle.rect.topleft[1] > 10:
-         #           paddle.rect.y -= paddle.speed
-         # Update the player paddle's location on the screen
+        #   elif paddle.moving == "up":
+        #       if paddle.rect.topleft[1] > 10:
+        #           paddle.rect.y -= paddle.speed
+
+        # Update the player paddle's location on the screen
         if playerPaddleObj.moving == "down":
             if playerPaddleObj.rect.bottomleft[1] < screenHeight-10:
                 playerPaddleObj.rect.y += playerPaddleObj.speed
         elif playerPaddleObj.moving == "up":
             if playerPaddleObj.rect.topleft[1] > 10:
                 playerPaddleObj.rect.y -= playerPaddleObj.speed
-
-        # =========================================================================================
-        # Your code here to send an update to the server on your paddle's information,
-        # where the ball is and the current score.
-        # Feel free to change when the score is updated to suit your needs/requirements
-        # -_-_-_-_- Send state to the server -_-_-_-_-
-
-
 
         # =========================================================================================
 
@@ -174,15 +168,11 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
         scoreRect = updateScore(lScore, rScore, screen, WHITE, scoreFont)
         pygame.display.update()
         clock.tick(60)
-        
-        # This number should be synchronized between you and your opponent.  If your number is larger
-        # then you are ahead of them in time, if theirs is larger, they are ahead of you, and you need to
-        # catch up (use their info)
-        #sync += 1
-        # =========================================================================================
-        # Send your server update here at the end of the game loop to sync your game with your
-        # opponent's game
 
+        # =========================================================================================
+        # ============================ SERVER-CLIENT DIALOG =======================================
+
+        # -_-_-_-_- SEND GAME STATE -_-_-_-_-
         data = {'sync': sync,   # Assemble the Json dictionary
             'paddle': [playerPaddleObj.rect.x, playerPaddleObj.rect.y],
             'ball': [ball.rect.x, ball.rect.y],
@@ -191,7 +181,7 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
         jsonData = json.dumps(data) # Dump the data
         client.send(jsonData.encode()) # Send the data
 
-        # -_-_-_-_- Recieve game state from server unless sync == 0 -_-_-_-_-
+        # -_-_-_-_- RECIEVE GAME STATE -_-_-_-_-
 
         # Recieve game state from server
         received = client.recv(1024) # Recieve socket data
@@ -213,7 +203,7 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
         lScore = jsonData['score'][0]   # Update the scores
         rScore = jsonData['score'][1]
 
-
+        # Update paddle positions
         if playerPaddle == "left":
             opponentPaddleObj.rect.x = jsonData['right'][0]
             opponentPaddleObj.rect.y = jsonData['right'][1]
@@ -223,18 +213,17 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
 
         sync = jsonData['sync'] + 1 # Update the sync variable
 
-
+        # DEBUG 
         print("Sync: ", jsonData['sync'])
         print("Left: ", jsonData['left'][0], " ", jsonData['left'][1])
         print("Right: ", jsonData['right'][0], " ", jsonData['right'][1])
         print("Ball: ", jsonData['ball'][0], " ", jsonData['ball'][1])
+
         if ballCounter < 1:
             time.sleep(1)
             ballCounter+=1
 
         # =========================================================================================
-
-
 
 
 # This is where you will connect to the server to get the info required to call the game loop.  Mainly
@@ -258,7 +247,7 @@ def joinServer(ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
     errorLabel.config(text="Waiting for other player...")
     errorLabel.update()
 
-    # Get the required information from your server (screen width, height & player paddle, "left or "right)
+    # -_-_-_-_- Recieve preliminary data from server -_-_-_-_-
     received = client.recv(1024)
     data = received.decode()
     jsonData = json.loads(data)
@@ -272,12 +261,11 @@ def joinServer(ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
     # You may or may not need to call this, depending on how many times you update the label
     errorLabel.update()     
 
-
-
     # Close this window and start the game with the info passed to you from the server
     app.withdraw()     # Hides the window (we'll kill it later)
     playGame(screenWidth, screenHeight, side, client)  # User will be either left or right paddle
     app.quit()         # Kills the window
+
 
 # Author: Alexander Barrera, Modified by Caleb Fields
 # Purpose: Create the starting screen for the client
@@ -319,6 +307,7 @@ def startScreen() -> None:
     joinButton.grid(column=0, row=3, columnspan=2)
 
     app.mainloop()
+
 
 if __name__ == "__main__":
     startScreen()
