@@ -232,7 +232,7 @@ def establishServer() -> None:
             isLeft = True
 
         threadList.append(newThread) # Add the thread to the list and start it   (Probably unnecessary)
-        if(__gameList__[gameItr - 1]['left'].start and __gameList__[gameItr - 1]['right'].start):
+        if(__gameList__[gameItr - 1]['left'].start and __gameList__[gameItr - 1]['right'].start) and isLeft:
             print("Starting game " + str(gameItr - 1))
             threadList[-1].start()
             threadList[-2].start()
