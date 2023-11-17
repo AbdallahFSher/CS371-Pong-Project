@@ -11,9 +11,22 @@ import threading
 import json # For packing and sending data
 from typing import Optional, Union # For type hinting
 import time
+import http.server
+import socketserver
 
-SERVER_IP = "10.47.145.97"
+
+# Use this file to write your server logic
+# You will need to support at least two clients
+# You will need to keep track of where on the screen (x,y coordinates) each paddle is, the score 
+# for each player and where the ball is, and relay that to each client
+# I suggest you use the sync variable in pongClient.py to determine how out of sync your two
+# clients are and take actions to resync the games
+
+SERVER_IP = "localhost"
 __gameList__ = [] # Private global list that stores dictionaries pairs of left and right players, which contain gameStates
+
+
+leaderboard = {}
 
 # Author(s):   Ty Gordon, Caleb Fields, Abdallah Sher
 # Purpose:  To store 2-tuples of data in a concise way
@@ -118,12 +131,14 @@ class GameState():
 # Purpose:  To manage the interactions between the server and each client
 # Pre:  A clientSocket object must be passed in order to know which client this thread regulates
 # Post: The thread will persist and handle its client's transmissions
-def clientThread(clientSocket: socket, clientAddress, gameId: int, isLeft: bool) -> None:
+def clientThread(name:str, clientSocket: socket, clientAddress, gameId: int, isLeft: bool) -> None:
 
     # Game constants
     SCREEN_HEIGHT = 480
     SCREEN_WIDTH = 640
     SYNC_OFFSET = 1
+
+    leaderboard[name] = 0 
 
     sideString = 'left' if isLeft else 'right' # Send player's side (left or right)
     oppString = 'right' if isLeft else 'left'  # Opponent's side (left or right)
@@ -160,7 +175,12 @@ def clientThread(clientSocket: socket, clientAddress, gameId: int, isLeft: bool)
         # Construct score, sync, and ball pos from recieved Json
         clientGameState.score = Vec2D(jsonData['score'][0], jsonData['score'][1])
         clientGameState.sync = jsonData['sync']
-        clientGameState.ball = Vec2D(jsonData['ball'][0], jsonData['ball'][1])
+
+        #Default to left side's ball being the correct one
+        if isLeft:
+            clientGameState.ball = Vec2D(jsonData['ball'][0], jsonData['ball'][1])
+        else:
+            clientGameState.ball = __gameList__[gameId][oppString].ball
 
         # Construct paddle positions from recieve Json
         if isLeft:
@@ -189,6 +209,18 @@ def clientThread(clientSocket: socket, clientAddress, gameId: int, isLeft: bool)
         jsonData = json.dumps(data) # Dump (package) the data
         clientSocket.send(jsonData.encode()) # Send the data
 
+        if clientGameState.score.x >= 5 or clientGameState.score.y >= 5:
+            __gameList__[gameId]['left'].start = False
+            __gameList__[gameId]['right'].start = False
+            print("Game " + str(gameId) + " over")
+            if isLeft:
+                if clientGameState.score.x >= 5:
+                    leaderboard[name] += 1
+            else:
+                if clientGameState.score.y >= 5:
+                    leaderboard[name] += 1
+            break
+
     clientSocket.close()    # Close the connection after client goes silent
 
 
@@ -199,6 +231,9 @@ def clientThread(clientSocket: socket, clientAddress, gameId: int, isLeft: bool)
 # Post: A server will have been created and will 
 def establishServer() -> None:
     port = 7777
+
+    htmlThread = threading.Thread(target=startLeaderboardServer)
+    htmlThread.start()
 
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # Create the server
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)    # Work with localhost
@@ -215,9 +250,13 @@ def establishServer() -> None:
     while(True):
 
         clientSocket, clientAddress = server.accept()   # Connect with a client
-        print("Client Connected. | Address: ", clientAddress[0], " Port: ", clientAddress[1])   # Print connection details
+        name = clientSocket.recv(1024).decode()
+        if not name.isalnum():
+            clientSocket.close()
+            continue
+        print(name, " Connected. | Address: ", clientAddress[0], " Port: ", clientAddress[1])   # Print connection details
 
-        newThread = threading.Thread(target=clientThread, args=(clientSocket, clientAddress, gameItr, isLeft))  # Start the thread at the function clientThread
+        newThread = threading.Thread(target=clientThread, args=(name, clientSocket, clientAddress, gameItr, isLeft))  # Start the thread at the function clientThread
 
         # Decide if player is left or right and pass this decision
         if isLeft:
@@ -234,12 +273,45 @@ def establishServer() -> None:
             print("Starting game " + str(gameItr - 1))
             threadList[-1].start()
             threadList[-2].start()
+            threadList[-1].join()
+            threadList[-2].join()
+
+            #Load in old leaderboard
+            with open('leaderboard.json', 'r') as leaderboardFile:
+                tempLeaderboard = json.load(leaderboardFile)
+                leaderboardFile.close()
+            #Sort in descending order
+            #Update leaderboard
+            del(tempLeaderboard[0])
+            for item in tempLeaderboard:
+                if item['name'] not in leaderboard:
+                    leaderboard[item['name']] = 0
+                leaderboard[item['name']] += item['score']
+            sortedLeaderboard = sorted(leaderboard.items(), key=lambda x:x[1], reverse=True)
+            sortedLeaderboard = dict(sortedLeaderboard)
+            with open('leaderboard.json', 'w') as leaderboardFile:
+                leaderboardFile.write("[{}")
+                for key in sortedLeaderboard.keys():
+                    leaderboardFile.write(",{\"name\":\""+key+"\",\"score\":"+str(leaderboard[key])+"}\n")
+                leaderboardFile.write("]")
+                leaderboardFile.close()
+            leaderboard = {}
+
+    htmlThread.join()
 
     for t in threadList:    # Iterate and join all threads
         t.join()
 
     server.close()  # Close the server after connection termination
 
+def startLeaderboardServer():
+    PORT = 80
+    Handler = http.server.SimpleHTTPRequestHandler
+
+    # Host leaderboard.html on port 80
+    with socketserver.TCPServer((SERVER_IP, PORT), Handler) as httpd:
+        print("serving at port", PORT)
+        httpd.serve_forever()
 
 # Author(s):   Ty Gordon
 # Purpose:  To start the server program

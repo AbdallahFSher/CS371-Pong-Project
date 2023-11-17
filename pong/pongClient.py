@@ -66,6 +66,7 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
     ballCounter = 0
 
     playing = True
+    sendPlayAgain = False
 
     while True:
         # Wiping the screen
@@ -85,13 +86,6 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
 
             elif event.type == pygame.KEYUP:
                 playerPaddleObj.moving = ""
-            elif not playing and event.type == pygame.K_SPACE:
-                #Clear the wintext and play again text from the screen
-                screen.fill((0,0,0), winMessage)
-                screen.fill((0,0,0), playAgainRect)
-                lScore = 0
-                rScore = 0
-                playing = True
 
         # Update the player paddle and opponent paddle's location on the screen
 
@@ -120,11 +114,10 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
             textRect = textSurface.get_rect()
             textRect.center = ((screenWidth/2), screenHeight/2)
             winMessage = screen.blit(textSurface, textRect)
-            playAgainText = winFont.render("Space to Play Again", False, WHITE, (0,0,0))
-            playAgainRect = playAgainText.get_rect()
-            playAgainRect.center = ((screenWidth/2), (screenHeight/2)+50)
-            screen.blit(playAgainText, playAgainRect)
-            playing = False
+            pygame.display.update()
+            time.sleep(5)
+            pygame.display.quit()
+            break
         elif ballCounter >= 1:
             # ==== Ball Logic =====================================================================
             ball.updatePos()
@@ -174,9 +167,12 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
 
         # -_-_-_-_- SEND GAME STATE -_-_-_-_-
         data = {'sync': sync,   # Assemble the Json dictionary
-            'paddle': [playerPaddleObj.rect.x, playerPaddleObj.rect.y],
-            'ball': [ball.rect.x, ball.rect.y],
-            'score': [lScore, rScore]}
+                'paddle': [playerPaddleObj.rect.x, playerPaddleObj.rect.y],
+                'ball': [ball.rect.x, ball.rect.y],
+                'score': [lScore, rScore],
+                }
+            
+
         
         jsonData = json.dumps(data) # Dump the data
         client.send(jsonData.encode()) # Send the data
@@ -231,7 +227,7 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
 # If you want to hard code the screen's dimensions into the code, that's fine, but you will need to know
 # which client is which
 #   Modified by Ty Gordon, Caleb Fields, Abdallah Sher
-def joinServer(ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
+def joinServer(name:str, ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
     # Purpose:      This method is fired when the join button is clicked
     # Arguments:
     # ip            A string holding the IP address of the server
@@ -243,6 +239,7 @@ def joinServer(ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
     # You don't have to use SOCK_STREAM, use what you think is best
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client.connect((ip, int(port)))
+    client.send(name.encode())
 
     errorLabel.config(text="Waiting for other player...")
     errorLabel.update()
@@ -264,10 +261,12 @@ def joinServer(ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
     # Close this window and start the game with the info passed to you from the server
     app.withdraw()     # Hides the window (we'll kill it later)
     playGame(screenWidth, screenHeight, side, client)  # User will be either left or right paddle
-    app.quit()         # Kills the window
+    app.wm_deiconify()
 
 
-# Author: Alexander Barrera, Modified by Caleb Fields
+    #app.quit()         # Kills the window
+
+# Author: Alexander Barrera, Modified by Caleb Fields, Abdallah Sher
 # Purpose: Create the starting screen for the client
 # Pre: None
 # Post: User should be presented with the starting screen and be able to interact with it
@@ -288,23 +287,29 @@ def startScreen() -> None:
     titleLabel = tk.Label(image=image)
     titleLabel.grid(column=0, row=0, columnspan=2)
 
+    nameLabel = tk.Label(text="Name:")
+    nameLabel.grid(column=0, row=1, sticky="W", padx=8)
+
+    nameEntry = tk.Entry(app)
+    nameEntry.grid(column=1, row=1)
+
     ipLabel = tk.Label(text="Server IP:")
-    ipLabel.grid(column=0, row=1, sticky="W", padx=8)
+    ipLabel.grid(column=0, row=2, sticky="W", padx=8)
 
     ipEntry = tk.Entry(app)
-    ipEntry.grid(column=1, row=1)
+    ipEntry.grid(column=1, row=2)
 
     portLabel = tk.Label(text="Server Port:")
-    portLabel.grid(column=0, row=2, sticky="W", padx=8)
+    portLabel.grid(column=0, row=3, sticky="W", padx=8)
 
     portEntry = tk.Entry(app)
-    portEntry.grid(column=1, row=2)
+    portEntry.grid(column=1, row=3)
 
     errorLabel = tk.Label(text="")
-    errorLabel.grid(column=0, row=4, columnspan=2)
+    errorLabel.grid(column=0, row=5, columnspan=2)
 
-    joinButton = tk.Button(text="Join", command=lambda: joinServer(ipEntry.get(), portEntry.get(), errorLabel, app))
-    joinButton.grid(column=0, row=3, columnspan=2)
+    joinButton = tk.Button(text="Join", command=lambda: joinServer(nameEntry.get(), ipEntry.get(), portEntry.get(), errorLabel, app))
+    joinButton.grid(column=0, row=4, columnspan=2)
 
     app.mainloop()
 

@@ -2,7 +2,10 @@
 <html>
     <head>
         <title>Pong Leaderboard</title>
-
+        <!-- INCLUDING JQUERY-->
+        <script src= 
+    "https://code.jquery.com/jquery-3.5.1.js"> 
+        </script> 
         <style>
         table {
             border-collapse: collapse;
@@ -38,24 +41,28 @@
 
     <h1>Pong Leaderboard</h1>
 
-    <table class="center">
+    <table class="center" id="leaderboard">
         <tr>
             <th>Name</th>
             <th>Score</th>
         </tr>
-        <tr>
-            <td>CF</td>
-            <td>4</td>
-        </tr>
-        <tr>
-            <td>TG</td>
-            <td>3</td>
-        </tr>
-        <tr>
-            <td>AS</td>
-            <td>1</td>
-        </tr>
+
     </table>
+
+    <script>
+        $(document).ready(function () {
+            $.getJSON("leaderboard.json", function (data) {
+                var leaderboard = '';
+                $.each(data.slice(1), function (key, value) {
+                    leaderboard += '<tr>';
+                    leaderboard += '<td>' + value.name + '</td>';
+                    leaderboard += '<td>' + value.score + '</td>';
+                    leaderboard += '</tr>';
+                });
+                $('#leaderboard').append(leaderboard);
+            })
+        })
+    </script>
 
     </body>
 </html>
