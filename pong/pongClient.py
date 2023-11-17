@@ -66,6 +66,7 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
     ballCounter = 0
 
     playing = True
+    sendPlayAgain = False
 
     while True:
         # Wiping the screen
@@ -85,13 +86,6 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
 
             elif event.type == pygame.KEYUP:
                 playerPaddleObj.moving = ""
-            elif not playing and event.type == pygame.K_SPACE:
-                #Clear the wintext and play again text from the screen
-                screen.fill((0,0,0), winMessage)
-                screen.fill((0,0,0), playAgainRect)
-                lScore = 0
-                rScore = 0
-                playing = True
 
         # Update the player paddle and opponent paddle's location on the screen
         #for paddle in [playerPaddleObj, opponentPaddleObj]:
@@ -126,11 +120,10 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
             textRect = textSurface.get_rect()
             textRect.center = ((screenWidth/2), screenHeight/2)
             winMessage = screen.blit(textSurface, textRect)
-            playAgainText = winFont.render("Space to Play Again", False, WHITE, (0,0,0))
-            playAgainRect = playAgainText.get_rect()
-            playAgainRect.center = ((screenWidth/2), (screenHeight/2)+50)
-            screen.blit(playAgainText, playAgainRect)
-            playing = False
+            pygame.display.update()
+            time.sleep(5)
+            pygame.display.quit()
+            break
         elif ballCounter >= 1:
             # ==== Ball Logic =====================================================================
             ball.updatePos()
@@ -184,9 +177,12 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
         # opponent's game
 
         data = {'sync': sync,   # Assemble the Json dictionary
-            'paddle': [playerPaddleObj.rect.x, playerPaddleObj.rect.y],
-            'ball': [ball.rect.x, ball.rect.y],
-            'score': [lScore, rScore]}
+                'paddle': [playerPaddleObj.rect.x, playerPaddleObj.rect.y],
+                'ball': [ball.rect.x, ball.rect.y],
+                'score': [lScore, rScore],
+                }
+            
+
         
         jsonData = json.dumps(data) # Dump the data
         client.send(jsonData.encode()) # Send the data
@@ -277,7 +273,10 @@ def joinServer(ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
     # Close this window and start the game with the info passed to you from the server
     app.withdraw()     # Hides the window (we'll kill it later)
     playGame(screenWidth, screenHeight, side, client)  # User will be either left or right paddle
-    app.quit()         # Kills the window
+    app.wm_deiconify()
+
+
+    #app.quit()         # Kills the window
 
 # Author: Alexander Barrera, Modified by Caleb Fields
 # Purpose: Create the starting screen for the client

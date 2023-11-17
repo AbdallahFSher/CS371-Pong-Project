@@ -19,7 +19,7 @@ import time
 # I suggest you use the sync variable in pongClient.py to determine how out of sync your two
 # clients are and take actions to resync the games
 
-SERVER_IP = "10.47.145.97"
+SERVER_IP = "localhost"
 __gameList__ = [] # Private global list that stores dictionaries pairs of left and right players, which contain gameStates
 
 # Author(s):   Ty Gordon, Caleb Fields, Abdallah Sher
@@ -185,6 +185,12 @@ def clientThread(clientSocket: socket, clientAddress, gameId: int, isLeft: bool)
         
         jsonData = json.dumps(data) # Dump (package) the data
         clientSocket.send(jsonData.encode()) # Send the data
+
+        if clientGameState.score.x >= 5 or clientGameState.score.y >= 5:
+            __gameList__[gameId]['left'].start = False
+            __gameList__[gameId]['right'].start = False
+            print("Game " + str(gameId) + " over")
+            break
 
     clientSocket.close()    # Close the connection after client goes silent
 
