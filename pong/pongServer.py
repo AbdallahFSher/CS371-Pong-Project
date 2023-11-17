@@ -22,7 +22,7 @@ import socketserver
 # I suggest you use the sync variable in pongClient.py to determine how out of sync your two
 # clients are and take actions to resync the games
 
-SERVER_IP = "localhost"
+SERVER_IP = "10.47.9.30"
 __gameList__ = [] # Private global list that stores dictionaries pairs of left and right players, which contain gameStates
 
 
@@ -295,7 +295,7 @@ def establishServer() -> None:
                     leaderboardFile.write(",{\"name\":\""+key+"\",\"score\":"+str(leaderboard[key])+"}\n")
                 leaderboardFile.write("]")
                 leaderboardFile.close()
-            leaderboard = {}
+            #leaderboard = {}
 
     htmlThread.join()
 
