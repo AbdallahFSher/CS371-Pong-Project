@@ -1,6 +1,6 @@
 # =================================================================================================
-# Contributing Authors:	    Ty Gordon, Caleb Fields
-# Email Addresses:          wtgo223@uky.edu, cwfi224@uky.edu
+# Contributing Authors:	    Ty Gordon, Caleb Fields, Abdallah Sher
+# Email Addresses:          wtgo223@uky.edu, cwfi224@uky.edu, afs230@uky.edu
 # Date:                     11/2/2023
 # Purpose:                  To implement the client and game logic
 # Misc:                     N/A
@@ -279,7 +279,7 @@ def joinServer(name:str, ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> No
 
     #app.quit()         # Kills the window
 
-# Author: Alexander Barrera, Modified by Caleb Fields
+# Author: Alexander Barrera, Modified by Caleb Fields, Abdallah Sher
 # Purpose: Create the starting screen for the client
 # Pre: None
 # Post: User should be presented with the starting screen and be able to interact with it

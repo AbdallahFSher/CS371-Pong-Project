@@ -1,6 +1,6 @@
 # =================================================================================================
-# Contributing Authors:	    Ty Gordon, Caleb Fields
-# Email Addresses:          wtgo223@uky.edu, cwfi224@uky.edu
+# Contributing Authors:	    Ty Gordon, Caleb Fields, Abdallah Sher
+# Email Addresses:          wtgo223@uky.edu, cwfi224@uky.edu, afsh230@uky.edu
 # Date:                     11/1/2023
 # Purpose:                  To implement the server logic
 # Misc:                     N/A
