@@ -218,13 +218,15 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
 # which client is which
 # Modified by Ty Gordon, Caleb Fields, Abdallah Sher
 # Purpose:      This method is fired when the join button is clicked
-# # Arguments:
-# # ip            A string holding the IP address of the server
-# # port          An int holding the port the server is using
-# # errorLabel    A tk label widget, modify it's text to display messages to the user (example below)
-# # app           The tk window object, needed to kill the window
-# # Create a socket and connect to the server
-# # You don't have to use SOCK_STREAM, use what you think is best
+# Pre: The fields in the start screen have been filled
+# Post: The game will be ready to be played
+# Arguments:
+# ip            A string holding the IP address of the server
+# port          An int holding the port the server is using
+# errorLabel    A tk label widget, modify it's text to display messages to the user (example below)
+# app           The tk window object, needed to kill the window
+# Create a socket and connect to the server
+# You don't have to use SOCK_STREAM, use what you think is best
 def joinServer(name:str, ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
     
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
