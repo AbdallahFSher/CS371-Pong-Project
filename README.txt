@@ -23,8 +23,10 @@ Run the following line to install the required libraries for this project:
 
 `pip3 install -r requirements.txt`
 
+Change the SERVER_IP variable in pongServer.py to be the IP of the machine hosting the server
+
 Known Bugs
 ==========
-- The server doesn't work because the logic isn't yet written.
-- The client doesn't speak to the server
-
+- The leaderboard still updates the score of a player even if they change their name.
+- Some stuttering issues may arise depending on the quality of the network
+- Player disconnections can lead to undefined behavior
