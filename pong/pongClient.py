@@ -87,16 +87,6 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
             elif event.type == pygame.KEYUP:
                 playerPaddleObj.moving = ""
 
-        # Update the player paddle and opponent paddle's location on the screen
-
-        #for paddle in [playerPaddleObj, opponentPaddleObj]:
-        #    if paddle.moving == "down":
-        #        if paddle.rect.bottomleft[1] < screenHeight-10:
-        #            paddle.rect.y += paddle.speed
-        #   elif paddle.moving == "up":
-        #       if paddle.rect.topleft[1] > 10:
-        #           paddle.rect.y -= paddle.speed
-
         # Update the player paddle's location on the screen
         if playerPaddleObj.moving == "down":
             if playerPaddleObj.rect.bottomleft[1] < screenHeight-10:
@@ -226,17 +216,17 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
 # the screen width, height and player paddle (either "left" or "right")
 # If you want to hard code the screen's dimensions into the code, that's fine, but you will need to know
 # which client is which
-#   Modified by Ty Gordon, Caleb Fields, Abdallah Sher
+# Modified by Ty Gordon, Caleb Fields, Abdallah Sher
+# Purpose:      This method is fired when the join button is clicked
+# # Arguments:
+# # ip            A string holding the IP address of the server
+# # port          An int holding the port the server is using
+# # errorLabel    A tk label widget, modify it's text to display messages to the user (example below)
+# # app           The tk window object, needed to kill the window
+# # Create a socket and connect to the server
+# # You don't have to use SOCK_STREAM, use what you think is best
 def joinServer(name:str, ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
-    # Purpose:      This method is fired when the join button is clicked
-    # Arguments:
-    # ip            A string holding the IP address of the server
-    # port          An int holding the port the server is using
-    # errorLabel    A tk label widget, modify it's text to display messages to the user (example below)
-    # app           The tk window object, needed to kill the window
     
-    # Create a socket and connect to the server
-    # You don't have to use SOCK_STREAM, use what you think is best
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client.connect((ip, int(port)))
     client.send(name.encode())
@@ -252,10 +242,7 @@ def joinServer(name:str, ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> No
     side = jsonData['side']
     screenHeight = jsonData['height']
     screenWidth = jsonData['width']
-
-    # If you have messages you'd like to show the user use the errorLabel widget like so
     errorLabel.config(text=f"Unable to connect to server: IP: {ip}, Port: {port}")
-    # You may or may not need to call this, depending on how many times you update the label
     errorLabel.update()     
 
     # Close this window and start the game with the info passed to you from the server
